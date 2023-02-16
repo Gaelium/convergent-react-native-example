@@ -1,9 +1,37 @@
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from "react-native";
 import React, { useState, useLayoutEffect } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Card from "../components/Card";
+
+const deleteAll = async (setNotes) => {
+  Alert.alert(
+    "Delete All Messages?",
+    "You will not be able to undo this action",
+    [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "OK",
+        onPress: () => {
+          AsyncStorage.clear();
+          setNotes([]);
+        },
+      },
+    ],
+    { cancelable: false }
+  );
+};
 
 const Main = ({ navigation }) => {
   const [notes, setNotes] = useState([]);
@@ -29,8 +57,7 @@ const Main = ({ navigation }) => {
       headerRight: () => (
         <TouchableOpacity
           onPress={() => {
-            AsyncStorage.clear();
-            setNotes([]);
+            deleteAll(setNotes);
           }}
           style={{ marginRight: 10 }}
         >
@@ -61,6 +88,8 @@ const Main = ({ navigation }) => {
               key={note.id}
               id={note.id}
               navigation={navigation}
+              //Pass through the update state function
+              setNotes={setNotes}
             />
           ))}
         </View>
