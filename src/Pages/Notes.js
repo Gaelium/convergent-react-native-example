@@ -4,67 +4,47 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  Alert,
+  LogBox,
 } from "react-native";
 import React, { useState, useLayoutEffect } from "react";
 import { useIsFocused } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import Icon from "react-native-vector-icons/MaterialIcons";
 import Card from "../components/Card";
+import { db } from "../firebaseConfig";
+import { collection, onSnapshot, query } from "firebase/firestore";
+import { useNavigation } from "@react-navigation/native";
 
-const deleteAll = async (setNotes) => {
-  Alert.alert(
-    "Delete All Messages?",
-    "You will not be able to undo this action",
-    [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "OK",
-        onPress: () => {
-          AsyncStorage.clear();
-          setNotes([]);
-        },
-      },
-    ],
-    { cancelable: false }
-  );
-};
+/*
+  We can ignore these warnings since we don't care about state persistence (note data)
+  when navigating back to the main page.
+*/
+LogBox.ignoreLogs([
+  "Non-serializable values were found in the navigation state",
+]);
+const Notes = ({ user }) => {
+  //usually this will automatically be passed through as a prop
+  //however, on expo the simulator will sometimes mess up the navigation
+  const navigation = useNavigation();
 
-const Main = ({ navigation }) => {
   const [notes, setNotes] = useState([]);
-  const [unsubscribe, setUnsubscribe] = useState(null);
+  const [email, setEmail] = useState(user.email);
 
   //Update when navigating back to this page
   const isFocused = useIsFocused();
-  const getNotes = async () => {
-    try {
-      const jsonValue = await AsyncStorage.getItem("notes");
-      return jsonValue != null ? JSON.parse(jsonValue) : [];
-    } catch (e) {
-      console.log(e);
-    }
-  };
 
   useLayoutEffect(() => {
-    getNotes().then((notes) => setNotes(notes));
-    setUnsubscribe(unsubscribe);
+    const q = query(collection(db, email));
+
+    //get all notes from the database
+    //and subscribe for updates
+    onSnapshot(q, (querySnapshot) => {
+      let notesToGet = [];
+      querySnapshot.forEach((doc) => {
+        notesToGet.push(doc.data());
+      });
+      setNotes(notesToGet);
+    });
 
     //set the header right button
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          onPress={() => {
-            deleteAll(setNotes);
-          }}
-          style={{ marginRight: 10 }}
-        >
-          <Icon name="delete" size={30} style={{ color: "#000" }}></Icon>
-        </TouchableOpacity>
-      ),
-    });
   }, [isFocused]);
 
   /*If there are no notes, return the image
@@ -81,6 +61,7 @@ const Main = ({ navigation }) => {
         </View>
       ) : (
         <View style={styles.containerCards}>
+          {/*Map through the notes array and return a card for each note*/}
           {notes.map((note) => (
             <Card
               title={note.title}
@@ -88,15 +69,17 @@ const Main = ({ navigation }) => {
               key={note.id}
               id={note.id}
               navigation={navigation}
-              //Pass through the update state function
-              setNotes={setNotes}
+              email={email}
             />
           ))}
         </View>
       )}
+
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => navigation.navigate("Add")}
+        onPress={() =>
+          navigation.navigate("Add", { navigation: navigation, email: email })
+        }
       >
         <Text style={styles.addButtonText}>+</Text>
       </TouchableOpacity>
@@ -124,7 +107,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginTop: 10,
     color: "#888",
-    fontFamily: "Roboto",
   },
   addButton: {
     position: "absolute",
@@ -142,4 +124,4 @@ const styles = StyleSheet.create({
     color: "white",
   },
 });
-export default Main;
+export default Notes;

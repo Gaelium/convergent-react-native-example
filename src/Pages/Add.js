@@ -1,43 +1,41 @@
 import React, { useState, useLayoutEffect } from "react";
 import { View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { db } from "../firebaseConfig";
+import { doc, setDoc } from "firebase/firestore";
 
-const Add = ({ navigation }) => {
+const Add = (props) => {
+  //This way uses just props, instead of route and navigation like edit
+  //Both are equally valid ways to pass in data
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-
-  const saveNote = async ({ title, desc }) => {
+  const saveNote = async ({ title, desc, email }) => {
+    //generate a random id
+    const id = Math.floor(Math.random() * 1000000000).toString();
     //create a note object
     const note = {
-      id: Math.floor(Math.random() * 100000000),
+      id: id,
       title: title,
       description: desc,
     };
-    //get the notes from async storage
-    let notes = await AsyncStorage.getItem("notes");
-    //if there are no notes, set an empty array
-    if (!notes) {
-      notes = [];
-    } else {
-      //if there are notes, set the notes to the notes variable
-      notes = JSON.parse(notes);
-    }
-    //add the new note to the front of the notes array
-    notes.unshift(note);
-    //save the notes to async storage
-    await AsyncStorage.setItem("notes", JSON.stringify(notes));
+    //add the note to the database
+    await setDoc(doc(db, email, id), note);
     //navigate to the main page
-    navigation.navigate("Main");
+    props.navigation.navigate("Notes");
   };
 
   //set the header right button
   useLayoutEffect(() => {
-    navigation.setOptions({
+    props.navigation.setOptions({
+      //Add a checkmark button to save the note
       headerRight: () => (
         <TouchableOpacity
           onPress={() => {
-            saveNote({ title: title, desc: description });
+            saveNote({
+              title: title,
+              desc: description,
+              email: props.route.params.email,
+            });
           }}
           style={{ marginRight: 10 }}
         >

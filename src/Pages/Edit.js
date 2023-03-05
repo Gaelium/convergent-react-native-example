@@ -1,46 +1,36 @@
 import React, { useState, useLayoutEffect } from "react";
 import { View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../firebaseConfig";
 
 const Edit = ({ navigation, route }) => {
-  const { key, name, desc } = route.params;
+  //This way uses route and navigation objects to pass in data
+  const { key, name, desc, email } = route.params;
   const [title, setTitle] = useState(name);
   const [description, setDescription] = useState(desc);
 
-  const saveNote = async ({ title, desc }) => {
+  const saveNote = async ({ title, desc, email }) => {
     //create a note object
     const note = {
       id: key,
       title: title,
       description: desc,
     };
-    //get the notes from async storage
-    let notes = await AsyncStorage.getItem("notes");
-    //if there are no notes, set an empty array
-    if (!notes) {
-      notes = [];
-    } else {
-      //if there are notes, set the notes to the notes variable
-      notes = JSON.parse(notes);
-    }
-    //remove and replace the note
-    notes = notes.filter((item) => item.id !== key);
-    //push to the front
-    notes.unshift(note);
-    //save the notes to async storage
-    await AsyncStorage.setItem("notes", JSON.stringify(notes));
+    //update the note in the database
+    await setDoc(doc(db, email, key), note);
     //navigate to the main page
-    navigation.navigate("Main");
+    navigation.navigate("Notes");
   };
 
   //set the header right button
   useLayoutEffect(() => {
     navigation.setOptions({
+      //Add a checkmark button to save the note
       headerRight: () => (
         <TouchableOpacity
           onPress={() => {
-            saveNote({ title: title, desc: description });
+            saveNote({ title: title, desc: description, email: email });
           }}
           style={{ marginRight: 10 }}
         >

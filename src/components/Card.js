@@ -1,46 +1,27 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React from "react";
+import { Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { doc, deleteDoc } from "firebase/firestore";
+import { db } from "../firebaseConfig";
 
-const deleteNote = async (id, setNotes) => {
-  //create a note object
-
-  //get the notes from async storage
-  let notes = await AsyncStorage.getItem("notes");
-  //if there are no notes, set an empty array
-  if (!notes) {
-    notes = [];
-  } else {
-    //if there are notes, set the notes to the notes variable
-    notes = JSON.parse(notes);
-  }
-  //remove and replace the note
-  notes = notes.filter((item) => item.id !== id);
-  //save the notes to async storage
-  await AsyncStorage.setItem("notes", JSON.stringify(notes));
-  setNotes(notes);
-  //navigate to the main page
+const deleteNote = async (id, email) => {
+  await deleteDoc(doc(db, email, id));
 };
-/*Bring leads out and say
-Hey, y'all great a job. The ideation of solutions seemed to go really well, with only a few minor hiccups.
-Last semester I heard you guys wanted advice for your meetings,
-and after listening in to your meeting I have some feedback based on what I saw
- 1. It seems some members are not engaged when you guys are talking. This is normal and happens, but there are a few ways I can think
- of to minimize this
-    When you want to interrupt members to talk about something be loud and bold, make sure they hear you and listen
- 2. ...
- But again, y'all did a good job. Just some little things that will make your meetings even better */
-const Card = ({ title, description, id, navigation, setNotes }) => (
+
+//Each note is mapped onto a card
+const Card = ({ title, description, id, navigation, email }) => (
   <TouchableOpacity
     style={styles.card}
+    //Navigates to the edit page, passing the note's title, description, and id
     onPress={() =>
       navigation.navigate("Edit", {
         test: "hello",
         desc: description,
         name: title,
         key: id,
+        email: email,
       })
     }
+    //Shows an alert, asking the user if they want to delete the note
     onLongPress={() => {
       Alert.alert(
         "Delete Message?",
@@ -52,7 +33,7 @@ const Card = ({ title, description, id, navigation, setNotes }) => (
           },
           {
             text: "OK",
-            onPress: () => deleteNote(id, setNotes),
+            onPress: () => deleteNote(id, email),
           },
         ],
         { cancelable: false }
