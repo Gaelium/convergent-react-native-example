@@ -5,8 +5,8 @@ This is an example React Native app that demonstrates how to use Firebase as a b
 ### Getting Started
 To get started with the app, follow these steps:
 
-- Clone this repo using git clone https://github.com/yourusername/react-native-notes-app.git
-- Move to the appropriate directory: cd react-native-notes-app.
+- Clone this repo using git clone https://github.com/Gaelium/convergent-react-native-example.git
+- Move to the appropriate directory: cd convergent-react-native-example.
 - Run npm install to install dependencies.
 - Create a new Firebase project and enable the Firestore Database and Authentication by Email.
 - Copy the Firebase configuration object into src/firebaseConfig.js.
