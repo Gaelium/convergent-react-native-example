@@ -22,3 +22,6 @@ The app includes the following features:
 
 ### Demo
 ![bad76ba7c4a5a0c9c27bff1033eb056c](https://user-images.githubusercontent.com/38620265/222974540-0dbcf864-662f-4b17-a601-4903c639b9ac.gif)
+
+### Aside
+There is a second branch called `asyncstorage` that uses React Native AsyncStorage instead of Firebase to store notes
